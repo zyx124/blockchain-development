@@ -290,6 +290,28 @@ contract("Exchange", ([deployer, feeAccount, user1, user2]) => {
                 })
 
             })
+
+            describe('failure', async () => {
+                it('rejects invalid order ids', async () => {
+                    const invalidOrderId = 99999
+                    await exchange.fillOrder(invalidOrderId, {from: user2}).should.be.rejectedWith(EVM_REVERT)
+
+                })
+
+                it('rejects already filled orders', async () => {
+                    //fill the order
+                    await exchange.fillOrder('1', {from: user2})
+                    // Try filling it again
+                    await exchange .fillOrder('1', {from: user2}).should.be.rejectedWith(EVM_REVERT)
+                })
+
+                it('rejects cancelled order', async () => {
+                    // cancel
+                    await exchange.cancelOrder('1', {from: user1})
+                    // Try filling the order
+                    await exchange.fillOrder('1', {from: user2}).should.be.rejectedWith(EVM_REVERT)
+                })
+            })
         })
 
         describe('cancelling orders', async () => {
@@ -323,7 +345,7 @@ contract("Exchange", ([deployer, feeAccount, user1, user2]) => {
                 it('rejects invalid order ids', async ()=> {
                     // try cancelling a wrong order
                     const invalidOrderId = 99999
-                    await exchange.cancelOrder(invalidOrderId, {from: user1}).should.be.rejectedWith(EVM_REVERT)
+                    await exchange.cancelOrder(invalidOrderId, { from: user1 }).should.be.rejectedWith(EVM_REVERT)
                 })
 
                 it('rejects unauthorized cancellations', async ()=> {
